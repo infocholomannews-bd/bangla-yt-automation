@@ -1,4 +1,5 @@
 import os
+import time
 import json
 import asyncio
 import requests
@@ -58,9 +59,25 @@ async def create_voice(text, filename):
 def create_image(prompt, filename):
     base_url = "https://" + "image.pollinations.ai/prompt/"
     url = f"{base_url}{requests.utils.quote(prompt)}?width=1280&height=720&nologo=true"
-    img_data = requests.get(url, timeout=60).content
-    with open(filename, "wb") as f:
-        f.write(img_data)
+    
+    for attempt in range(3):
+        try:
+            time.sleep(3)
+            resp = requests.get(url, timeout=60)
+            if resp.status_code == 200 and len(resp.content) > 5000:
+                with open(filename, "wb") as f:
+                    f.write(resp.content)
+                with Image.open(filename) as img:
+                    img.verify()
+                print(f"Image saved successfully: {filename}")
+                return
+        except Exception as e:
+            print(f"Image attempt {attempt+1} failed for {filename}: {e}")
+            
+    # ব্যাকআপ ছবি তৈরি (যদি সার্ভার ব্যস্ত থাকে)
+    print(f"Creating fallback background for {filename}")
+    fallback = Image.new("RGB", (1280, 720), color=(20, 35, 65))
+    fallback.save(filename, format="JPEG")
 
 def build_full_video(scenes, output_vid="final_video.mp4"):
     clips = []

@@ -27,10 +27,22 @@ def generate_long_script(topic):
         }}
     ]
     """
-    response = client.models.generate_content(
-        model="gemini-3.0-flash",
-        contents=prompt,
-    )
+    models_to_try = ["gemini-3.5-flash", "gemini-3.5-flash-lite", "gemini-3.8-flash", "gemini-3.1-flash-lite"]
+    response = None
+    for model_name in models_to_try:
+        try:
+            print(f"Trying model: {model_name}")
+            response = client.models.generate_content(
+                model=model_name,
+                contents=prompt,
+            )
+            break
+        except Exception as e:
+            print(f"Model {model_name} failed: {e}")
+            
+    if not response:
+        raise RuntimeError("All Gemini models failed!")
+        
     clean_json = response.text.strip().removeprefix("```json").removesuffix("```").strip()
     return json.loads(clean_json)
 

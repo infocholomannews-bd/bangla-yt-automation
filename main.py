@@ -13,9 +13,9 @@ def generate_long_script(topic):
     client = genai.Client(api_key=os.environ["GEMINI_API_KEY"])
     prompt = f"""
     Create a detailed, engaging 3.5 to 4-minute YouTube documentary/explainer video script in Bengali about this topic: "{topic}"
-
+    
     Divide the video into 8 to 10 logical scenes so the total spoken narration is around 450-550 Bengali words.
-
+    
     Return ONLY valid JSON with these exact keys:
     "yt_title": "Catchy Bengali YouTube video title (max 80 chars)",
     "yt_desc": "Detailed Bengali description with relevant hashtags",
@@ -28,7 +28,7 @@ def generate_long_script(topic):
     ]
     """
     response = client.models.generate_content(
-        model="gemini-2.5-flash",
+        model="gemini-3.0-flash",
         contents=prompt,
     )
     clean_json = response.text.strip().removeprefix("```json").removesuffix("```").strip()
@@ -50,19 +50,19 @@ def build_full_video(scenes, output_vid="final_video.mp4"):
     for idx, scene in enumerate(scenes):
         audio_file = f"audio_{idx}.mp3"
         img_file = f"img_{idx}.jpg"
-
+        
         asyncio.run(create_voice(scene["narration"], audio_file))
         create_image(scene["image_prompt"], img_file)
-
+        
         audio = AudioFileClip(audio_file)
         duration = audio.duration
-
+        
         img_clip = ImageClip(img_file).set_duration(duration).resize((1280, 720))
         img_clip = img_clip.resize(lambda t: 1 + 0.03 * (t / duration))
         img_clip = img_clip.set_audio(audio)
-
+        
         clips.append(img_clip)
-
+        
     final_video = concatenate_videoclips(clips, method="compose")
     final_video.write_videofile(output_vid, fps=24, codec="libx264", audio_codec="aac")
 

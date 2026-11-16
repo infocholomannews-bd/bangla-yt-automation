@@ -3,6 +3,11 @@ import json
 import asyncio
 import requests
 import edge_tts
+from PIL import Image
+
+if not hasattr(Image, 'ANTIALIAS'):
+    Image.ANTIALIAS = Image.LANCZOS
+
 from google import genai
 from moviepy.editor import ImageClip, AudioFileClip, concatenate_videoclips
 from google.oauth2.credentials import Credentials
